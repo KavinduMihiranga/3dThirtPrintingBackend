@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const systemAdminRoute=require("./routes/admin.route");
 const systemProductRoute=require("./routes/product.route");
 const systemOrderRoute=require("./routes/order.route");
+const systemCustomerRoute=require("./routes/customer.route");
 
 dotenv.config();
 const app = express();
@@ -34,7 +35,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/admin", systemAdminRoute);
 app.use("/api/product", systemProductRoute);
 app.use("/api/order", systemOrderRoute);
-app.use("/api/uploads", express.static("uploads"));
+app.use("/api/customer",systemCustomerRoute);
+app.use("/api/uploads", express.static( "uploads"));
+// app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get('/', (req, res) => {
     res.send('Server is running...');

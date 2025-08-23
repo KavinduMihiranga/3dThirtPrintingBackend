@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const addminSchema = new mongoose.Schema({
+const customerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, "please enter your name"],
@@ -17,11 +17,6 @@ const addminSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, "please enter your password"],
-    },
-    nic: {
-        type: String,
-        required: [true, "please enter your nic"],
-        unique: true
     },
     phone: {
         type: String,
@@ -47,12 +42,13 @@ const addminSchema = new mongoose.Schema({
     status: {
         type: String,
         required: [true, "please enter your status"],
-    },
+    }
+    
 },
 {
     timestamps: true,
 }
 );
 
-const Admin = mongoose.model('Admin', addminSchema);
-module.exports = Admin;
+const Customer = mongoose.model('Customer', customerSchema);
+module.exports = Customer;

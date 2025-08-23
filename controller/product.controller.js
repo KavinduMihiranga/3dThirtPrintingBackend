@@ -8,17 +8,30 @@ const storage = multer.diskStorage({
     cb(null, "uploads/"); // Make sure "uploads/" directory exists
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // e.g. 123456.jpg
+    const ext= path.extname(file.originalname);
+    cb(null, Date.now() + ext); // e.g. 123456.jpg
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage:storage });
 
+const getImagePath = (filename) => {
+  if (!filename) return null;
+  return `/api/uploads/${filename}`; // Adjust the path as needed
+};
 // Get all products
 const getProducts = async (req, res) => {
   try {
-    const product = await Product.find();
-    res.status(200).json({ data: product });
+    const products = await Product.find();
+
+    // Add public image path for each product before sending
+    const productsWithImagePath = products.map((prod) => {
+      const prodObj = prod.toObject(); // Convert Mongoose doc to plain object
+      prodObj.image = getImagePath(prodObj.image);  // Replace filename with public path
+      return prodObj;
+    });
+
+    res.status(200).json({ data: productsWithImagePath });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -28,7 +41,7 @@ const getProducts = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     const { name, category, description, price, qty, status } = req.body;
-    const imagePath = req.file ? req.file.filename : null;
+    const imageFilename = req.file ? req.file.filename : null;
 
     const product = await Product.create({
       name,
@@ -37,9 +50,11 @@ const createProduct = async (req, res) => {
       price,
       qty,
       status,
-      image: imagePath,
+      image: imageFilename,
     });
 
+    const productObj = product.toObject();
+    productObj.image = getImagePath(productObj.image);
     res.status(201).json({ data: product });
   } catch (error) {
     console.error("Error in createProduct:", error);
@@ -53,7 +68,11 @@ const getProduct = async (req, res) => {
     const { id } = req.params;
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ message: "Product not found" });
-    res.status(200).json({ data: product });
+
+    const productObj = product.toObject();
+    productObj.image = getImagePath(productObj.image);
+
+    res.status(200).json({ data: productObj });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -76,12 +95,14 @@ const updateProduct = async (req, res) => {
 
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    res.status(200).json({ data: product });
+    const productObj = product.toObject();
+    productObj.image = getImagePath(productObj.image);
+
+    res.status(200).json({ data: productObj });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 // Delete a product
 const deleteProduct = async (req, res) => {
   try {
