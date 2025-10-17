@@ -1,43 +1,51 @@
 const Product = require('../models/product.model');
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
-// Set up multer storage
+// ✅ Set up multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Make sure "uploads/" directory exists
+    const uploadPath = "uploads/";
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath);
+    }
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    const ext= path.extname(file.originalname);
-    cb(null, Date.now() + ext); // e.g. 123456.jpg
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext); // e.g. 1728391029384.jpg
   },
 });
 
-const upload = multer({ storage:storage });
+const upload = multer({ storage });
 
+// ✅ Helper: Generate full public image path
 const getImagePath = (filename) => {
   if (!filename) return null;
-  return `/api/uploads/${filename}`; // Adjust the path as needed
+  return `/api/uploads/${filename}`;
 };
-// Get all products
+
+// ✅ GET all products
 const getProducts = async (req, res) => {
   try {
     const products = await Product.find();
 
-    // Add public image path for each product before sending
     const productsWithImagePath = products.map((prod) => {
-      const prodObj = prod.toObject(); // Convert Mongoose doc to plain object
-      prodObj.image = getImagePath(prodObj.image);  // Replace filename with public path
+      const prodObj = prod.toObject();
+      prodObj.image = getImagePath(prodObj.image);
+      prodObj.title = prodObj.title || prodObj.name; // ensure title consistency
       return prodObj;
     });
 
     res.status(200).json({ data: productsWithImagePath });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in getProducts:", error);
+    res.status(500).json({ message: "Failed to fetch products", error: error.message });
   }
 };
 
-// Create a product (with image)
+// ✅ CREATE product (with image upload)
 const createProduct = async (req, res) => {
   try {
     const { name, category, description, price, qty, status } = req.body;
@@ -55,30 +63,37 @@ const createProduct = async (req, res) => {
 
     const productObj = product.toObject();
     productObj.image = getImagePath(productObj.image);
-    res.status(201).json({ data: product });
+    productObj.title = productObj.title || productObj.name;
+
+    res.status(201).json({ message: "Product created successfully", data: productObj });
   } catch (error) {
     console.error("Error in createProduct:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to create product", error: error.message });
   }
 };
 
-// Get a single product
+// ✅ GET a single product by ID
 const getProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findById(id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     const productObj = product.toObject();
     productObj.image = getImagePath(productObj.image);
+    productObj.title = productObj.title || productObj.name;
 
     res.status(200).json({ data: productObj });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in getProduct:", error);
+    res.status(500).json({ message: "Failed to fetch product", error: error.message });
   }
 };
 
-// Update a product (with optional image)
+// ✅ UPDATE product (with optional new image)
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -93,29 +108,43 @@ const updateProduct = async (req, res) => {
       runValidators: true,
     });
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     const productObj = product.toObject();
     productObj.image = getImagePath(productObj.image);
+    productObj.title = productObj.title || productObj.name;
 
-    res.status(200).json({ data: productObj });
+    res.status(200).json({ message: "Product updated successfully", data: productObj });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in updateProduct:", error);
+    res.status(500).json({ message: "Failed to update product", error: error.message });
   }
 };
-// Delete a product
+
+// ✅ DELETE product
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json({ message: 'Product deleted successfully' });
+    // Optionally remove image from uploads folder
+    if (product.image) {
+      const imagePath = path.join(__dirname, `../uploads/${product.image}`);
+      fs.unlink(imagePath, (err) => {
+        if (err) console.warn("Failed to delete image:", err.message);
+      });
+    }
+
+    res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in deleteProduct:", error);
+    res.status(500).json({ message: "Failed to delete product", error: error.message });
   }
 };
 
@@ -123,7 +152,7 @@ module.exports = {
   getProducts,
   getProduct,
   createProduct,
-  deleteProduct,
   updateProduct,
+  deleteProduct,
   upload, // exported for use in routes
 };

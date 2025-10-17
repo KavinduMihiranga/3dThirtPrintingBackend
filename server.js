@@ -6,6 +6,9 @@ const systemAdminRoute=require("./routes/admin.route");
 const systemProductRoute=require("./routes/product.route");
 const systemOrderRoute=require("./routes/order.route");
 const systemCustomerRoute=require("./routes/customer.route");
+const systemCheckoutRoute=require("./routes/checkout.route");
+const systemPaymentRoute = require("./routes/payment.route");
+const systemAnnouncementRoute = require("./routes/announcement.route");
 
 dotenv.config();
 const app = express();
@@ -36,7 +39,10 @@ app.use("/api/admin", systemAdminRoute);
 app.use("/api/product", systemProductRoute);
 app.use("/api/order", systemOrderRoute);
 app.use("/api/customer",systemCustomerRoute);
+app.use("/api/checkout",systemCheckoutRoute);
+app.use("/api/payments", systemPaymentRoute);
 app.use("/api/uploads", express.static( "uploads"));
+app.use("/api/announcements", systemAnnouncementRoute);
 // app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get('/', (req, res) => {
