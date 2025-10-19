@@ -11,33 +11,16 @@ const getOrders = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 const createOrder = async (req, res) => {
    
     try {
        const { customerName, address, tShirtName, qty, amount, paymentId } = req.body;
-      // check stock and reduce quantity
-    // for (const item of cartItems) {
-    //   const product = await Product.findById(item.productId);
-    //   if (!product) {
-    //     return res.status(404).json({ success: false, message: `Product not found: ${item.productId}` });
-    //   }
-    //   if (product.qty < item.qty) {
-    //     return res.status(400).json({ success: false, message: `Insufficient stock for ${product.name}` });
-    //   }
-    //   product.qty -= item.qty;
-    //   await product.save();
-    // }
     if (!customerName || !amount) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
 const newOrder = new Order({
-      // customerName,
-      // email,
-      // address,
-      // cartItems,
-      // amount,
-      // status: 'Pending',
       customerName,
       address,
       tShirtName,
@@ -46,27 +29,8 @@ const newOrder = new Order({
       paymentId,
     });
     await newOrder.save();
-
-// Send back data for PayHere frontend
-  //   res.status(201).json({
-  //     success: true,
-  //     data: {
-  //       orderId: newOrder._id,
-  //       amount,
-  //       customerName,
-  //       email,
-  //       address,
-  //       merchantId: process.env.PAYHERE_MERCHANT_ID,
-  //       currency: process.env.PAYMENT_CURRENCY,
-  //     },
-  //   }
-  // );
    res.status(201).json({ success: true, data: newOrder });
-
-        // const order = await Order.create(req.body);
-        // res.status(201).json({ success: true, data: newOrder });
     }catch (error) {
-        // res.status(400).json({ success: false, message: error.message });
          console.error("Error creating order:", error);
     res.status(500).json({ success: false, message: "Server Error" });
     }
