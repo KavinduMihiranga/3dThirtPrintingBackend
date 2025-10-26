@@ -13,10 +13,11 @@ const getOrders = async (req, res) => {
 };
 
 const createOrder = async (req, res) => {
-   
+   console.log("🟢 Received order data:");
     try {
-       const { customerName, address, tShirtName, qty, amount, paymentId } = req.body;
-    if (!customerName || !amount) {
+       const { customerName, address, tShirtName, qty, amount, paymentId,email, phone } = req.body;
+    // if (!customerName || !amount) {
+      if (!customerName || !tShirtName || !address || !qty) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
@@ -27,6 +28,8 @@ const newOrder = new Order({
       qty,
       amount,
       paymentId,
+      email,
+      phone,
     });
     await newOrder.save();
    res.status(201).json({ success: true, data: newOrder });
