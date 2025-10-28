@@ -37,6 +37,70 @@ const newOrder = new Order({
          console.error("Error creating order:", error);
     res.status(500).json({ success: false, message: "Server Error" });
     }
+
+// try {
+//     const {
+//       customerName,
+//       email,
+//       phone,
+//       tShirtName,
+//       designFile,
+//       designPreview,
+//       description,
+//       qty,
+//       price,
+//       billingAddress,
+//       shippingAddress,
+//       status = 'pending',
+//       paymentStatus = 'pending'
+//     } = req.body;
+
+//     console.log('📦 Creating order with data:', req.body);
+
+//     // Validate required fields
+//     if (!customerName || !email || !phone || !shippingAddress) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Missing required fields: customerName, email, phone, shippingAddress are required'
+//       });
+//     }
+
+//     const order = new Order({
+//       customerName,
+//       email,
+//       phone,
+//       tShirtName: tShirtName || 'Custom T-Shirt Design',
+//       designFile,
+//       designPreview,
+//       description: description || 'Custom T-Shirt Design Order',
+//       qty: qty || 1,
+//       price: price || 0,
+//       billingAddress,
+//       shippingAddress,
+//       status,
+//       paymentStatus,
+//       orderDate: new Date()
+//     });
+
+//     await order.save();
+
+//     console.log('✅ Order created successfully:', order._id);
+
+//     res.status(201).json({
+//       success: true,
+//       message: 'Order created successfully',
+//       data: order
+//     });
+
+//   } catch (error) {
+//     console.error('❌ Error creating order:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error creating order',
+//       error: error.message
+//     });
+//   }
+
 };
 
 // PayHere Notify (server-to-server verification)
