@@ -7,17 +7,19 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 
-// Import routes
+// Import routes - FIXED: Remove duplicate imports
 const systemAdminRoute = require("./routes/admin.route");
 const systemProductRoute = require("./routes/product.route");
 const systemOrderRoute = require("./routes/order.route");
-const systemCustomerRoute = require("./routes/customer.route");
+const systemCustomerRoute = require("./routes/customer.route"); // For customer management
 const systemCheckoutRoute = require("./routes/checkout.route");
 const systemPaymentRoute = require("./routes/payment.route");
 const systemAnnouncementRoute = require("./routes/announcement.route");
 const systemConfirmPaymentRoute = require("./routes/routes.paymentConfirm.routes");
 const systemdesignInquiryRoute = require("./routes/designInquiry.route");
-const systemAuthRoute = require("./routes/auth.route");
+const systemAuthRoute = require("./routes/auth.route"); // For admin auth
+const customerAuthRoute = require("./routes/customerAuth.route"); // For customer auth - FIXED: different variable name
+const systemContactUsRoute = require("./routes/contactUs.route");
 
 // Verify environment variables
 console.log('🔍 Checking environment variables...');
@@ -74,22 +76,40 @@ app.use('/uploads', express.static(uploadsPath, {
 app.use("/api/uploads", express.static("uploads"));
 
 // API Routes
-app.use("/api/auth", systemAuthRoute);
+app.use("/api/auth", systemAuthRoute); // Admin authentication
 app.use("/api/admin", systemAdminRoute);
 app.use("/api/product", systemProductRoute);
 app.use("/api/order", systemOrderRoute);
-app.use("/api/customer", systemCustomerRoute);
+app.use("/api/customer", systemCustomerRoute); // Customer management (admin side)
 app.use("/api/checkout", systemCheckoutRoute);
 app.use("/api/payments", systemPaymentRoute);
 app.use("/api/announcements", systemAnnouncementRoute);
 app.use("/api/payment", systemConfirmPaymentRoute);
 app.use("/api/design-inquiry", systemdesignInquiryRoute);
+app.use('/api/auth', customerAuthRoute); // Customer authentication - FIXED
+app.use('/api/contact-us', systemContactUsRoute);
 
 // Health check route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Server is running...', 
     status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Test customer route
+app.get('/api/test-customer', (req, res) => {
+  res.json({ 
+    message: 'Customer routes are working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Add this to your server.js temporarily for testing
+app.get('/api/contact-us/test', (req, res) => {
+  res.json({ 
+    message: 'Contact Us API is working!',
     timestamp: new Date().toISOString()
   });
 });
@@ -105,6 +125,10 @@ const startServer = async () => {
       console.log('🚀 Server started successfully!');
       console.log(`📡 Server running on http://localhost:${PORT}`);
       console.log('✨ Ready to accept requests');
+      console.log('🔗 Test URL: http://localhost:5000/api/test-customer');
+      console.log('👥 Available auth routes:');
+      console.log('   - POST /api/auth/customer-register');
+      console.log('   - POST /api/auth/customer-login');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

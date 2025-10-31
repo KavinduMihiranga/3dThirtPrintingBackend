@@ -1,52 +1,49 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/admin.model');
+const Customer = require('../models/customer.model');
 
-const verifyToken = async (req, res, next) => {
-  try {
-    // Get token from header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+const authMiddleware = async (req, res, next) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'No token, authorization denied' 
+            });
+        }
 
-    if (!token) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Access denied. No token provided.' 
-      });
-    }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        
+        let user;
+        if (decoded.role === 'customer') {
+            user = await Customer.findById(decoded.id);
+        } else {
+            user = await Admin.findById(decoded.id);
+        }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    
-    // Verify admin still exists and is active
-    const admin = await Admin.findById(decoded.id);
-    if (!admin) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid token' 
-      });
-    }
+        if (!user) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Token is not valid' 
+            });
+        }
 
-    if (admin.status !== 'Active') {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Account deactivated' 
-      });
+        req.user = {
+            id: user._id,
+            email: user.email,
+            role: decoded.role || 'admin',
+            name: user.name
+        };
+        
+        next();
+    } catch (error) {
+        console.error('Auth middleware error:', error);
+        res.status(401).json({ 
+            success: false,
+            message: 'Token is not valid' 
+        });
     }
-    
-    req.user = decoded;
-    next();
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Token expired' 
-      });
-    }
-    return res.status(403).json({ 
-      success: false,
-      message: 'Invalid token' 
-    });
-  }
 };
 
-module.exports = verifyToken;
+module.exports = authMiddleware;
