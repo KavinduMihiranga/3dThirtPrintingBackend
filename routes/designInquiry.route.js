@@ -6,12 +6,10 @@ const {
     getDesignInquiries,
     getDesignInquiryById,
     updateDesignInquiryStatus,
-    
 } = require('../controller/designInquiry.controller');
 
 router.post('/', upload.single('designFile'), createDesignInquiry);
 router.get('/', getDesignInquiries);
-router.post('/', createDesignInquiry);  
 router.get('/:id', getDesignInquiryById);
 router.put('/:id', updateDesignInquiryStatus);
 
