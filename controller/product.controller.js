@@ -48,12 +48,13 @@ const getProducts = async (req, res) => {
 // ✅ CREATE product (with image upload)
 const createProduct = async (req, res) => {
   try {
-    const { name, category, description, price, qty, status } = req.body;
+    const { name, category, size, description, price, qty, status } = req.body;
     const imageFilename = req.file ? req.file.filename : null;
 
     const product = await Product.create({
       name,
       category,
+      size,
       description,
       price,
       qty,
