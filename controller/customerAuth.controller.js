@@ -303,9 +303,9 @@ exports.forgotPassword = async (req, res) => {
             { expiresIn: '1h' }
         );
         
-        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/customer-reset-password?token=${resetToken}`;
 
-        console.log('🔗 Reset link generated:', resetLink);
+        console.log('🔗 Customer Reset link generated:', resetLink);
 
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
             console.log('⚠️ Email credentials not configured. Returning reset link for testing.');
@@ -316,11 +316,47 @@ exports.forgotPassword = async (req, res) => {
             });
         }
 
-        // Email sending code would go here...
-        res.json({ 
-            success: true, 
-            message: 'Password reset instructions sent to your email.' 
-        });
+          // If email is configured, try to send it
+           try {
+             const transporter = nodemailer.createTransport({
+               service: 'gmail',
+               auth: {
+                 user: process.env.EMAIL_USER,
+                 pass: process.env.EMAIL_PASSWORD,
+               },
+             });
+       
+             const mailOptions = {
+               from: process.env.EMAIL_USER,
+               to: email,
+               subject: 'Password Reset Request',
+               html: `
+                 <div style="font-family: Arial, sans-serif;">
+                   <h2>Password Reset Request</h2>
+                   <p>Click the link below to reset your password:</p>
+                   <a href="${resetLink}">Reset Password</a>
+                   <p>This link expires in 1 hour.</p>
+                 </div>
+               `,
+             };
+       
+             await transporter.sendMail(mailOptions);
+             console.log('✅ Password reset email sent to:', email);
+             
+             res.json({ 
+               success: true, 
+               message: 'Password reset instructions sent to your email.' 
+             });
+             
+           } catch (emailError) {
+             console.error('❌ Email sending failed:', emailError);
+             // Still return success but with the reset link
+             res.json({ 
+               success: true, 
+               message: 'Email service temporarily unavailable. Use this reset link:',
+               resetLink: resetLink
+             });
+           }
         
     } catch (err) {
         console.error('❌ Customer forgot password error:', err.message);
@@ -329,6 +365,8 @@ exports.forgotPassword = async (req, res) => {
             message: 'Server error processing your request.' 
         });
     }
+
+    
 };
 
 // Reset Password
